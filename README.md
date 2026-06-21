@@ -1,5 +1,10 @@
 # Panel Nueva Sendas · Nova Nexus
 
+**🌐 En vivo:** https://gozakiux.github.io/novanexus-panel/
+
+> Despliegue automático: cada `push` a `main` reconstruye y publica el sitio
+> mediante GitHub Actions (ver `.github/workflows/deploy.yml`).
+
 Panel web interno para gestionar alumnos de **dos marcas en un solo sistema** y
 detectar candidatos a recompra con un puntaje de propensión.
 
