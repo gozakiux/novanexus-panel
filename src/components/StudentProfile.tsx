@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { Student } from "../data/types";
 import { fechaLarga } from "../lib/format";
 import { BrandTag, NivelTag, PagoTag } from "./atoms";
@@ -117,7 +118,7 @@ export function StudentProfile({ student, onBack }: { student: Student; onBack: 
   );
 }
 
-function DataCard({ title, children }: { title: string; children: React.ReactNode }) {
+function DataCard({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="card pad data-card">
       <div className="card-head">
@@ -128,7 +129,7 @@ function DataCard({ title, children }: { title: string; children: React.ReactNod
   );
 }
 
-function Row({ k, v }: { k: string; v: React.ReactNode }) {
+function Row({ k, v }: { k: string; v: ReactNode }) {
   return (
     <div className="row">
       <dt>{k}</dt>
