@@ -1,0 +1,65 @@
+:root {
+  /* ---- Paper / ink (warm editorial base) ---- */
+  --paper: oklch(97.2% 0.012 84);
+  --paper-2: oklch(95% 0.016 82);
+  --card: oklch(99% 0.008 86);
+  --card-sunk: oklch(96.4% 0.014 84);
+  --ink: oklch(24% 0.022 62);
+  --ink-soft: oklch(42% 0.02 62);
+  --ink-faint: oklch(58% 0.018 64);
+  --line: oklch(88% 0.014 78);
+  --line-strong: oklch(82% 0.018 76);
+
+  /* ---- Brand: Nueva Sendas (deep pine / growth) ---- */
+  --pine: oklch(46% 0.072 168);
+  --pine-deep: oklch(34% 0.058 168);
+  --pine-soft: oklch(92% 0.04 168);
+
+  /* ---- Brand: Nova Nexus (plum + gold, premium) ---- */
+  --plum: oklch(44% 0.11 330);
+  --plum-deep: oklch(33% 0.095 332);
+  --plum-soft: oklch(93% 0.045 330);
+  --gold: oklch(76% 0.115 84);
+  --gold-deep: oklch(64% 0.12 78);
+
+  /* ---- Accent: clay / terracotta (human warmth) ---- */
+  --clay: oklch(64% 0.13 46);
+  --clay-soft: oklch(93% 0.05 56);
+
+  /* ---- Score bands ---- */
+  --alto: oklch(58% 0.12 158);
+  --alto-soft: oklch(92% 0.06 158);
+  --medio: oklch(74% 0.13 78);
+  --medio-soft: oklch(94% 0.06 84);
+  --bajo: oklch(63% 0.14 32);
+  --bajo-soft: oklch(93% 0.05 38);
+
+  /* ---- Sidebar (dark warm espresso) ---- */
+  --shell: oklch(26% 0.028 60);
+  --shell-2: oklch(22% 0.026 58);
+  --shell-line: oklch(36% 0.03 62);
+  --shell-ink: oklch(90% 0.018 80);
+  --shell-faint: oklch(70% 0.022 72);
+
+  /* ---- Type ---- */
+  --display: "Fraunces", Georgia, "Times New Roman", serif;
+  --sans: "Hanken Grotesk", -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* ---- Radii ---- */
+  --r-xs: 7px;
+  --r-sm: 11px;
+  --r-md: 16px;
+  --r-lg: 22px;
+  --r-xl: 30px;
+
+  /* ---- Shadows (soft, layered, warm) ---- */
+  --sh-1: 0 1px 2px oklch(30% 0.03 60 / 0.06), 0 1px 1px oklch(30% 0.03 60 / 0.04);
+  --sh-2: 0 4px 12px oklch(30% 0.03 60 / 0.07), 0 2px 5px oklch(30% 0.03 60 / 0.05);
+  --sh-3: 0 14px 40px oklch(28% 0.03 60 / 0.12), 0 4px 12px oklch(28% 0.03 60 / 0.06);
+  --sh-pop: 0 24px 60px oklch(26% 0.03 60 / 0.18);
+
+  /* ---- Motion ---- */
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --fast: 160ms;
+  --normal: 320ms;
+}
