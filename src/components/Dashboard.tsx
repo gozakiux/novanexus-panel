@@ -1,6 +1,6 @@
 import type { Student } from "../data/types";
 import { pct } from "../lib/format";
-import { contarPor, matriculasPorMes, nivelBreakdown } from "../lib/stats";
+import { contarPor, matriculasPorAnio, nivelBreakdown } from "../lib/stats";
 import { Avatar, KPI, NivelTag } from "./atoms";
 import { BandBar, MiniBars, MonthsBar } from "./charts";
 import { ScoreBar } from "./ScoreRing";
@@ -10,25 +10,31 @@ export function Dashboard({
   students,
   all,
   onOpen,
+  isReal = false,
 }: {
   students: Student[];
   all: Student[];
   onOpen: (id: string) => void;
+  isReal?: boolean;
 }) {
   const total = students.length;
   const validados = students.filter((s) => s.estadoPago === "Validado").length;
+  const conCorreo = students.filter((s) => s.correo.includes("@")).length;
   const recompradores = students.filter((s) => s.recompro).length;
   const bands = nivelBreakdown(students);
 
   // Candidatos: alumnos de Nueva Sendas con puntaje alto, aún no captados por Nova Nexus.
   const candidatos = all
-    .filter((s) => s.marca === "Nueva Sendas" && s.score >= 70)
+    .filter((s) => s.marca === "Nueva Sendas" && s.nivel === "Alto")
     .sort((a, b) => b.score - a.score)
     .slice(0, 6);
 
-  const porProfesion = contarPor(students, (s) => s.profesion, 6);
-  const porDistrito = contarPor(students, (s) => s.distrito, 6);
-  const meses = matriculasPorMes(students, 12);
+  const porPrograma = contarPor(
+    students.filter((s) => s.programa),
+    (s) => s.programa,
+    7
+  );
+  const porAnio = matriculasPorAnio(students);
 
   return (
     <div className="view rise">
@@ -44,12 +50,21 @@ export function Dashboard({
 
       <section className="kpi-row">
         <KPI label="Alumnos totales" value={String(total)} hint="en la marca activa" accent="pine" />
-        <KPI
-          label="Pago validado"
-          value={`${pct(validados, total)}%`}
-          hint={`${validados} con comprobante`}
-          accent="gold"
-        />
+        {isReal ? (
+          <KPI
+            label="Contactables por correo"
+            value={`${pct(conCorreo, total)}%`}
+            hint={`${conCorreo.toLocaleString("es-PE")} con correo`}
+            accent="gold"
+          />
+        ) : (
+          <KPI
+            label="Pago validado"
+            value={`${pct(validados, total)}%`}
+            hint={`${validados} con comprobante`}
+            accent="gold"
+          />
+        )}
         <KPI
           label="Recompra histórica"
           value={`${pct(recompradores, total)}%`}
@@ -58,7 +73,7 @@ export function Dashboard({
         />
         <KPI
           label="Candidatos a Nova Nexus"
-          value={String(candidatos.length ? candidatos.length : bands.Alto)}
+          value={bands.Alto.toLocaleString("es-PE")}
           hint="propensión alta"
           accent="plum"
         />
@@ -67,27 +82,21 @@ export function Dashboard({
       <div className="grid-2">
         <section className="card pad">
           <div className="card-head">
-            <h3>Matrículas por mes</h3>
-            <span className="muted">últimos 12 meses</span>
+            <h3>Matrículas por año</h3>
+            <span className="muted">{porAnio.length} años</span>
           </div>
-          <MonthsBar data={meses} />
+          <MonthsBar data={porAnio} label="Matrículas por año" />
         </section>
 
         <section className="card pad">
           <div className="card-head">
             <h3>Distribución de propensión</h3>
-            <span className="muted">{total} alumnos</span>
+            <span className="muted">{total.toLocaleString("es-PE")} alumnos</span>
           </div>
           <BandBar alto={bands.Alto} medio={bands.Medio} bajo={bands.Bajo} />
-          <div className="grid-2 tight" style={{ marginTop: 18 }}>
-            <div>
-              <p className="mini-title">Por profesión</p>
-              <MiniBars data={porProfesion} />
-            </div>
-            <div>
-              <p className="mini-title">Por distrito</p>
-              <MiniBars data={porDistrito} />
-            </div>
+          <div style={{ marginTop: 18 }}>
+            <p className="mini-title">Programas más llevados</p>
+            <MiniBars data={porPrograma} />
           </div>
         </section>
       </div>
@@ -104,12 +113,14 @@ export function Dashboard({
         </div>
         <ul className="cand-list">
           {candidatos.map((s) => (
-            <li key={s.id} className="cand-item" onClick={() => onOpen(s.id)}>
+            <li key={s.id} className="cand-item" tabIndex={0} role="button" onClick={() => onOpen(s.id)} onKeyDown={(e) => { if (e.key === "Enter") onOpen(s.id); }}>
               <Avatar nombre={s.nombre} marca={s.marca} />
               <div className="cand-main">
                 <strong>{s.nombre}</strong>
                 <span className="muted">
-                  {s.profesion} · {s.distrito}
+                  {isReal
+                    ? `${s.programa}${s.aniosRaw ? " · " + s.aniosRaw : ""}`
+                    : `${s.profesion} · ${s.distrito}`}
                 </span>
               </div>
               <div className="cand-score">

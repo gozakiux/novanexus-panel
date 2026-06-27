@@ -28,3 +28,8 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+
+# Datos REALES de alumnos (PII) — NUNCA subir al repo publico.
+# Viven solo en local; el sitio publico usa los datos demo.
+src/data/real-students.json
+/tools/

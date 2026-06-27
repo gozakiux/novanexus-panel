@@ -29,26 +29,16 @@ export interface MesConteo {
   value: number;
 }
 
-/** Matrículas por mes en los últimos `n` meses respecto a la fecha de corte. */
-export function matriculasPorMes(students: Student[], n = 12): MesConteo[] {
-  const corte = new Date("2026-06-20T00:00:00");
-  const meses: MesConteo[] = [];
-  const nombres = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "set", "oct", "nov", "dic"];
-  const buckets = new Map<string, number>();
-
-  for (let i = n - 1; i >= 0; i--) {
-    const d = new Date(corte.getFullYear(), corte.getMonth() - i, 1);
-    const k = `${d.getFullYear()}-${d.getMonth()}`;
-    buckets.set(k, 0);
-    meses.push({ etiqueta: nombres[d.getMonth()], value: 0 });
-  }
-
+/** Matrículas agrupadas por año (a partir de la fecha de matrícula). */
+export function matriculasPorAnio(students: Student[]): MesConteo[] {
+  const buckets = new Map<number, number>();
   for (const s of students) {
-    const d = new Date(s.fechaMatricula + "T00:00:00");
-    const k = `${d.getFullYear()}-${d.getMonth()}`;
-    if (buckets.has(k)) buckets.set(k, (buckets.get(k) ?? 0) + 1);
+    if (!s.fechaMatricula) continue;
+    const y = Number(s.fechaMatricula.slice(0, 4));
+    if (!y) continue;
+    buckets.set(y, (buckets.get(y) ?? 0) + 1);
   }
-
-  const keys = [...buckets.keys()];
-  return meses.map((m, idx) => ({ ...m, value: buckets.get(keys[idx]) ?? 0 }));
+  return [...buckets.entries()]
+    .sort((a, b) => a[0] - b[0])
+    .map(([y, value]) => ({ etiqueta: String(y), value }));
 }

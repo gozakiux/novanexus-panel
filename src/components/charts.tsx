@@ -1,9 +1,9 @@
 import type { MesConteo } from "../lib/stats";
 
-export function MonthsBar({ data }: { data: MesConteo[] }) {
+export function MonthsBar({ data, label = "Matrículas por mes" }: { data: MesConteo[]; label?: string }) {
   const max = Math.max(1, ...data.map((d) => d.value));
   return (
-    <div className="months-bar" role="img" aria-label="Matrículas por mes">
+    <div className="months-bar" role="img" aria-label={label}>
       {data.map((d, i) => (
         <div className="months-bar-col" key={i}>
           <div className="months-bar-track">

@@ -31,4 +31,7 @@ export interface Student {
   score: number; // 0-100
   nivel: Nivel;
   factores: Factor[];
+  // Opcionales: presentes en la base real de Nueva Sendas
+  programasRaw?: string; // historial completo de programas
+  aniosRaw?: string; // años en que se matriculó
 }

@@ -6,17 +6,23 @@ import { ScoreBar } from "./ScoreRing";
 import { IconExport, IconSearch } from "./icons";
 
 const TODOS = "Todos";
+const MAX_FILAS = 300;
 
 function unique(students: Student[], key: (s: Student) => string): string[] {
-  return [TODOS, ...[...new Set(students.map(key))].sort((a, b) => a.localeCompare(b))];
+  const vals = [...new Set(students.map(key).filter(Boolean))].sort((a, b) =>
+    a.localeCompare(b)
+  );
+  return [TODOS, ...vals];
 }
 
 export function StudentsView({
   students,
   onOpen,
+  isReal = false,
 }: {
   students: Student[];
   onOpen: (id: string) => void;
+  isReal?: boolean;
 }) {
   const [q, setQ] = useState("");
   const [distrito, setDistrito] = useState(TODOS);
@@ -24,34 +30,46 @@ export function StudentsView({
   const [nivel, setNivel] = useState(TODOS);
   const [pago, setPago] = useState(TODOS);
   const [genero, setGenero] = useState(TODOS);
+  const [recompra, setRecompra] = useState(TODOS);
 
-  const distritos = useMemo(() => unique(students, (s) => s.distrito), [students]);
-  const profesiones = useMemo(() => unique(students, (s) => s.profesion), [students]);
+  const distritos = useMemo(() => (isReal ? [TODOS] : unique(students, (s) => s.distrito)), [students, isReal]);
+  const profesiones = useMemo(() => (isReal ? [TODOS] : unique(students, (s) => s.profesion)), [students, isReal]);
 
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();
     return students.filter((s) => {
       if (term && !`${s.nombre} ${s.dni} ${s.correo}`.toLowerCase().includes(term)) return false;
-      if (distrito !== TODOS && s.distrito !== distrito) return false;
-      if (profesion !== TODOS && s.profesion !== profesion) return false;
       if (nivel !== TODOS && s.nivel !== nivel) return false;
-      if (pago !== TODOS && s.estadoPago !== pago) return false;
-      if (genero !== TODOS && s.genero !== genero) return false;
+      if (isReal) {
+        if (recompra === "Recompradores" && !s.recompro) return false;
+        if (recompra === "Una compra" && s.recompro) return false;
+      } else {
+        if (distrito !== TODOS && s.distrito !== distrito) return false;
+        if (profesion !== TODOS && s.profesion !== profesion) return false;
+        if (pago !== TODOS && s.estadoPago !== pago) return false;
+        if (genero !== TODOS && s.genero !== genero) return false;
+      }
       return true;
     });
-  }, [students, q, distrito, profesion, nivel, pago, genero]);
+  }, [students, q, distrito, profesion, nivel, pago, genero, recompra, isReal]);
+
+  const visible = filtered.slice(0, MAX_FILAS);
 
   return (
     <div className="view rise">
       <header className="page-head">
         <div>
-          <p className="eyebrow">Base de datos</p>
+          <p className="eyebrow">Base de datos {isReal ? "· Nueva Sendas" : ""}</p>
           <h1 className="page-title">Directorio de alumnos</h1>
           <p className="page-sub">
-            {filtered.length} de {students.length} alumnos · clic en una fila para ver la ficha
+            {filtered.length.toLocaleString("es-PE")} de{" "}
+            {students.length.toLocaleString("es-PE")} alumnos · clic en una fila para ver la ficha
           </p>
         </div>
-        <button className="btn btn-ghost" onClick={() => alert("Exportaría la vista filtrada a Excel.")}>
+        <button
+          className="btn btn-ghost"
+          onClick={() => alert("Exportaría la vista filtrada a Excel.")}
+        >
           <IconExport /> Exportar a Excel
         </button>
       </header>
@@ -60,16 +78,27 @@ export function StudentsView({
         <label className="search">
           <IconSearch />
           <input
-            placeholder="Buscar por nombre, DNI o correo…"
+            placeholder="Buscar por nombre, correo o DNI…"
             value={q}
             onChange={(e) => setQ(e.target.value)}
           />
         </label>
-        <Select label="Distrito" value={distrito} setValue={setDistrito} opts={distritos} />
-        <Select label="Profesión" value={profesion} setValue={setProfesion} opts={profesiones} />
         <Select label="Nivel" value={nivel} setValue={setNivel} opts={[TODOS, "Alto", "Medio", "Bajo"]} />
-        <Select label="Pago" value={pago} setValue={setPago} opts={[TODOS, "Validado", "Pendiente", "Sin pago"]} />
-        <Select label="Género" value={genero} setValue={setGenero} opts={[TODOS, "Femenino", "Masculino"]} />
+        {isReal ? (
+          <Select
+            label="Recompra"
+            value={recompra}
+            setValue={setRecompra}
+            opts={[TODOS, "Recompradores", "Una compra"]}
+          />
+        ) : (
+          <>
+            <Select label="Distrito" value={distrito} setValue={setDistrito} opts={distritos} />
+            <Select label="Profesión" value={profesion} setValue={setProfesion} opts={profesiones} />
+            <Select label="Pago" value={pago} setValue={setPago} opts={[TODOS, "Validado", "Pendiente", "Sin pago"]} />
+            <Select label="Género" value={genero} setValue={setGenero} opts={[TODOS, "Femenino", "Masculino"]} />
+          </>
+        )}
       </div>
 
       <div className="card table-card">
@@ -77,31 +106,45 @@ export function StudentsView({
           <thead>
             <tr>
               <th>Alumno</th>
-              <th>Profesión</th>
-              <th>Distrito</th>
-              <th>Matrícula</th>
+              <th>{isReal ? "Programa" : "Profesión"}</th>
+              <th>{isReal ? "Años" : "Distrito"}</th>
+              <th>{isReal ? "N.° prog." : "Matrícula"}</th>
               <th>Marca</th>
-              <th>Pago</th>
+              <th>{isReal ? "Recompra" : "Pago"}</th>
               <th className="th-score">Propensión</th>
             </tr>
           </thead>
           <tbody>
-            {filtered.map((s) => (
-              <tr key={s.id} onClick={() => onOpen(s.id)}>
+            {visible.map((s) => (
+              <tr key={s.id} tabIndex={0} onClick={() => onOpen(s.id)} onKeyDown={(e) => { if (e.key === "Enter") onOpen(s.id); }}>
                 <td>
                   <div className="cell-name">
                     <Avatar nombre={s.nombre} marca={s.marca} size={34} />
                     <div>
                       <strong>{s.nombre}</strong>
-                      <span className="muted small">{s.genero}</span>
+                      <span className="muted small">
+                        {isReal ? (s.correo || "Sin correo") : s.genero}
+                      </span>
                     </div>
                   </div>
                 </td>
-                <td>{s.profesion}</td>
-                <td>{s.distrito}</td>
-                <td className="muted">{fechaCorta(s.fechaMatricula)}</td>
+                <td title={isReal ? s.programasRaw : undefined}>
+                  {isReal ? s.programa : s.profesion || "—"}
+                </td>
+                <td className="muted">{isReal ? s.aniosRaw || "—" : s.distrito || "—"}</td>
+                <td className="muted numeric">
+                  {isReal ? s.numeroCompras : s.fechaMatricula ? fechaCorta(s.fechaMatricula) : "—"}
+                </td>
                 <td><BrandTag marca={s.marca} /></td>
-                <td><PagoTag estado={s.estadoPago} /></td>
+                <td>
+                  {isReal ? (
+                    <span className={`tag ${s.recompro ? "tag-alto" : "tag-bajo"}`}>
+                      {s.recompro ? "Recompró" : "1 programa"}
+                    </span>
+                  ) : (
+                    <PagoTag estado={s.estadoPago} />
+                  )}
+                </td>
                 <td>
                   <div className="cell-score">
                     <ScoreBar score={s.score} nivel={s.nivel} />
@@ -114,6 +157,12 @@ export function StudentsView({
         </table>
         {filtered.length === 0 && (
           <div className="empty pad">Ningún alumno coincide con esos filtros.</div>
+        )}
+        {filtered.length > MAX_FILAS && (
+          <div className="table-foot">
+            Mostrando {MAX_FILAS} de {filtered.length.toLocaleString("es-PE")} · refiná con la
+            búsqueda o los filtros para acotar.
+          </div>
         )}
       </div>
     </div>
