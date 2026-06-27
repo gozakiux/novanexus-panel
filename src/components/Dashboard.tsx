@@ -19,6 +19,12 @@ export function Dashboard({
   onSegment: (key: string) => void;
   isReal?: boolean;
 }) {
+  const hoy = new Date().toLocaleDateString("es-PE", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
   const total = students.length;
   const validados = students.filter((s) => s.estadoPago === "Validado").length;
   const conCorreo = students.filter((s) => s.correo.includes("@")).length;
@@ -45,7 +51,7 @@ export function Dashboard({
           <p className="eyebrow">Resumen general</p>
           <h1 className="page-title">Buenos días, equipo Sendas</h1>
           <p className="page-sub">
-            Hoy es viernes 20 de junio de 2026 · {total.toLocaleString("es-PE")} alumnos en vista
+            Hoy es {hoy} · {total.toLocaleString("es-PE")} alumnos en vista
           </p>
         </div>
       </header>
@@ -132,7 +138,10 @@ export function Dashboard({
               role="button"
               onClick={() => onOpen(s.id)}
               onKeyDown={(e) => {
-                if (e.key === "Enter") onOpen(s.id);
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  onOpen(s.id);
+                }
               }}
             >
               <Avatar nombre={s.nombre} marca={s.marca} />

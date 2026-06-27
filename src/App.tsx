@@ -25,7 +25,10 @@ export function App() {
     () => (brand === "Todas" ? SOURCE : SOURCE.filter((s) => s.marca === brand)),
     [brand, SOURCE]
   );
-  const selected = selectedId ? SOURCE.find((s) => s.id === selectedId) ?? null : null;
+  const selected = useMemo(
+    () => (selectedId ? SOURCE.find((s) => s.id === selectedId) ?? null : null),
+    [selectedId, SOURCE]
+  );
 
   const setView = (v: View) => {
     setSelectedId(null);
@@ -84,7 +87,10 @@ export function App() {
               <span className="user-avatar">AD</span>
               <span className="user-name">{session.user.email}</span>
             </span>
-            <button className="btn btn-ghost btn-logout" onClick={() => supabase.auth.signOut()}>
+            <button
+              className="btn btn-ghost btn-logout"
+              onClick={() => supabase.auth.signOut().catch((e) => console.error("Error al salir:", e))}
+            >
               Salir
             </button>
           </div>

@@ -79,11 +79,21 @@ export function useAlumnos(enabled: boolean) {
     };
   }, [enabled]);
 
-  // Guarda/quita a una persona de Nova Nexus (cambia su marca) y persiste en Supabase.
-  const cambiarMarca = async (id: string, marca: Brand) => {
+  // Guarda/quita a una persona de Nova Nexus. Optimista: revierte si falla.
+  // Devuelve true si se guardó correctamente.
+  const cambiarMarca = async (id: string, marca: Brand): Promise<boolean> => {
+    const previa = alumnos?.find((a) => a.id === id)?.marca;
     setAlumnos((prev) => (prev ? prev.map((a) => (a.id === id ? { ...a, marca } : a)) : prev));
     const { error: e } = await supabase.from("alumnos").update({ marca }).eq("id", id);
-    if (e) console.error("No se pudo guardar la marca:", e.message);
+    if (e) {
+      if (previa) {
+        setAlumnos((prev) =>
+          prev ? prev.map((a) => (a.id === id ? { ...a, marca: previa } : a)) : prev
+        );
+      }
+      return false;
+    }
+    return true;
   };
 
   return { alumnos, error, cargando, cambiarMarca };

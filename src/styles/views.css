@@ -933,3 +933,10 @@ button.kpi {
 .cta-nexus.guardado strong {
   color: oklch(38% 0.1 158);
 }
+
+.guard-error {
+  margin-top: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: oklch(50% 0.14 32);
+}

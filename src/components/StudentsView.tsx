@@ -4,6 +4,7 @@ import { fechaCorta } from "../lib/format";
 import { Avatar, BrandTag, NivelTag, PagoTag } from "./atoms";
 import { ScoreBar } from "./ScoreRing";
 import { IconExport, IconSearch } from "./icons";
+import { exportarAlumnosCSV } from "../lib/exportCsv";
 
 const TODOS = "Todos";
 const MAX_FILAS = 300;
@@ -21,7 +22,7 @@ const SEG_LABEL: Record<string, string> = {
 
 function unique(students: Student[], key: (s: Student) => string): string[] {
   const vals = [...new Set(students.map(key).filter(Boolean))].sort((a, b) =>
-    a.localeCompare(b)
+    a.localeCompare(b, "es-PE")
   );
   return [TODOS, ...vals];
 }
@@ -90,7 +91,7 @@ export function StudentsView({
         </div>
         <button
           className="btn btn-ghost"
-          onClick={() => alert("Exportaría la vista filtrada a Excel.")}
+          onClick={() => exportarAlumnosCSV("alumnos", filtered)}
         >
           <IconExport /> Exportar a Excel
         </button>
@@ -152,7 +153,7 @@ export function StudentsView({
           </thead>
           <tbody>
             {visible.map((s) => (
-              <tr key={s.id} tabIndex={0} onClick={() => onOpen(s.id)} onKeyDown={(e) => { if (e.key === "Enter") onOpen(s.id); }}>
+              <tr key={s.id} tabIndex={0} onClick={() => onOpen(s.id)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onOpen(s.id); } }}>
                 <td>
                   <div className="cell-name">
                     <Avatar nombre={s.nombre} marca={s.marca} size={34} />

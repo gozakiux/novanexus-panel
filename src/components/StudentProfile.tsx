@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { ReactNode } from "react";
 import type { Brand, Student } from "../data/types";
 import { fechaLarga } from "../lib/format";
@@ -7,6 +8,15 @@ import { IconArrowLeft, IconExternal, IconSpark } from "./icons";
 
 const DASH = "—";
 
+function urlSegura(url: string): string | undefined {
+  try {
+    const p = new URL(url);
+    return p.protocol === "https:" || p.protocol === "http:" ? url : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export function StudentProfile({
   student,
   onBack,
@@ -15,12 +25,23 @@ export function StudentProfile({
 }: {
   student: Student;
   onBack: () => void;
-  onGuardar: (id: string, marca: Brand) => void;
+  onGuardar: (id: string, marca: Brand) => Promise<boolean>;
   isReal?: boolean;
 }) {
   const s = student;
   const maxImpact = Math.max(...s.factores.map((f) => Math.abs(f.impact)), 1);
   const esCandidato = s.marca === "Nueva Sendas" && s.nivel === "Alto";
+  const comprobante = s.comprobanteUrl ? urlSegura(s.comprobanteUrl) : undefined;
+  const [guardError, setGuardError] = useState<string | null>(null);
+  const [guardando, setGuardando] = useState(false);
+
+  const guardar = async (marca: Brand) => {
+    setGuardError(null);
+    setGuardando(true);
+    const ok = await onGuardar(s.id, marca);
+    if (!ok) setGuardError("No se pudo guardar. Revisa tu conexión e intenta de nuevo.");
+    setGuardando(false);
+  };
 
   return (
     <div className="view rise">
@@ -96,8 +117,8 @@ export function StudentProfile({
                 <strong>✓ Guardado en Nova Nexus</strong>
                 <p className="muted small">Este alumno fue añadido al Diplomado TENCA.</p>
               </div>
-              <button className="btn btn-soft" onClick={() => onGuardar(s.id, "Nueva Sendas")}>
-                Quitar
+              <button className="btn btn-soft" onClick={() => guardar("Nueva Sendas")} disabled={guardando}>
+                {guardando ? "…" : "Quitar"}
               </button>
             </div>
           ) : (
@@ -110,11 +131,12 @@ export function StudentProfile({
                     : "Guárdalo para añadirlo al Diplomado TENCA de Nova Nexus."}
                 </p>
               </div>
-              <button className="btn btn-nexus" onClick={() => onGuardar(s.id, "Nova Nexus")}>
-                Guardar para Nova Nexus
+              <button className="btn btn-nexus" onClick={() => guardar("Nova Nexus")} disabled={guardando}>
+                {guardando ? "Guardando…" : "Guardar para Nova Nexus"}
               </button>
             </div>
           )}
+          {guardError && <p className="guard-error">{guardError}</p>}
         </section>
 
         <div className="profile-cols">
@@ -167,8 +189,8 @@ export function StudentProfile({
             <Row
               k="Comprobante"
               v={
-                s.comprobanteUrl ? (
-                  <a className="drive-link" href={s.comprobanteUrl} target="_blank" rel="noreferrer">
+                comprobante ? (
+                  <a className="drive-link" href={comprobante} target="_blank" rel="noopener noreferrer">
                     Ver en Drive <IconExternal />
                   </a>
                 ) : (

@@ -7,14 +7,26 @@ export function useAuth() {
   const [cargando, setCargando] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      setCargando(false);
-    });
+    let vivo = true;
+    supabase.auth
+      .getSession()
+      .then(({ data }) => {
+        if (vivo) setSession(data.session);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (vivo) setCargando(false);
+      });
     const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
-      setSession(s);
+      if (vivo) {
+        setSession(s);
+        setCargando(false);
+      }
     });
-    return () => sub.subscription.unsubscribe();
+    return () => {
+      vivo = false;
+      sub.subscription.unsubscribe();
+    };
   }, []);
 
   return { session, cargando };

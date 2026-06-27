@@ -1,5 +1,6 @@
 import type { Student } from "../data/types";
 import { IconExport } from "./icons";
+import { exportarAlumnosCSV } from "../lib/exportCsv";
 
 interface Segment {
   nombre: string;
@@ -54,26 +55,6 @@ const SEGMENTS: Segment[] = [
   },
 ];
 
-function descargarCSV(nombre: string, filas: Student[]) {
-  const cab = ["Nombre", "Correo", "Celular", "Programas", "Anios", "N programas", "Puntaje", "Nivel", "Marca"];
-  const esc = (v: string) => `"${String(v).replace(/"/g, '""')}"`;
-  const lineas = [cab.map(esc).join(",")];
-  for (const s of filas) {
-    lineas.push(
-      [s.nombre, s.correo, s.celular, s.programasRaw || s.programa, s.aniosRaw ?? "", String(s.numeroCompras), String(s.score), s.nivel, s.marca]
-        .map(esc)
-        .join(",")
-    );
-  }
-  const blob = new Blob(["﻿" + lineas.join("\n")], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `${nombre.toLowerCase().replace(/\s+/g, "-")}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
 export function SegmentsView({
   students,
   onSegment,
@@ -104,7 +85,10 @@ export function SegmentsView({
               role="button"
               onClick={() => onSegment(seg.key)}
               onKeyDown={(e) => {
-                if (e.key === "Enter") onSegment(seg.key);
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  onSegment(seg.key);
+                }
               }}
             >
               <div className="seg-card-top">
@@ -118,7 +102,7 @@ export function SegmentsView({
                   className="btn btn-soft seg-export"
                   onClick={(e) => {
                     e.stopPropagation();
-                    descargarCSV(seg.nombre, matches);
+                    exportarAlumnosCSV(seg.nombre, matches);
                   }}
                 >
                   <IconExport /> Exportar
