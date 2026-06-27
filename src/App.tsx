@@ -17,6 +17,7 @@ export function App() {
   const [view, setViewRaw] = useState<View>("inicio");
   const [brand, setBrand] = useState<BrandFilter>("Todas");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [prefilter, setPrefilter] = useState<string | null>(null);
 
   const SOURCE = useMemo(() => alumnos ?? [], [alumnos]);
 
@@ -28,11 +29,17 @@ export function App() {
 
   const setView = (v: View) => {
     setSelectedId(null);
+    setPrefilter(null);
     setViewRaw(v);
   };
   const open = (id: string) => {
     setSelectedId(id);
     if (view !== "alumnos") setViewRaw("alumnos");
+  };
+  const goToSegment = (key: string) => {
+    setSelectedId(null);
+    setPrefilter(key);
+    setViewRaw("alumnos");
   };
 
   if (authCargando) return <div className="boot">Cargando…</div>;
@@ -91,13 +98,25 @@ export function App() {
           ) : (
             <>
               {view === "inicio" && (
-                <Dashboard students={filtered} all={SOURCE} onOpen={open} isReal />
+                <Dashboard
+                  students={filtered}
+                  all={SOURCE}
+                  onOpen={open}
+                  onSegment={goToSegment}
+                  isReal
+                />
               )}
               {view === "alumnos" &&
                 (selected ? (
                   <StudentProfile student={selected} onBack={() => setSelectedId(null)} isReal />
                 ) : (
-                  <StudentsView students={filtered} onOpen={open} isReal />
+                  <StudentsView
+                    students={filtered}
+                    onOpen={open}
+                    isReal
+                    prefilter={prefilter}
+                    onClearPrefilter={() => setPrefilter(null)}
+                  />
                 ))}
               {view === "segmentos" && <SegmentsView students={filtered} />}
               {view === "importar" && <ImporterView />}

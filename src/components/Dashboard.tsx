@@ -10,11 +10,13 @@ export function Dashboard({
   students,
   all,
   onOpen,
+  onSegment,
   isReal = false,
 }: {
   students: Student[];
   all: Student[];
   onOpen: (id: string) => void;
+  onSegment: (key: string) => void;
   isReal?: boolean;
 }) {
   const total = students.length;
@@ -43,19 +45,26 @@ export function Dashboard({
           <p className="eyebrow">Resumen general</p>
           <h1 className="page-title">Buenos días, equipo Sendas</h1>
           <p className="page-sub">
-            Hoy es viernes 20 de junio de 2026 · {total} alumnos en vista
+            Hoy es viernes 20 de junio de 2026 · {total.toLocaleString("es-PE")} alumnos en vista
           </p>
         </div>
       </header>
 
       <section className="kpi-row">
-        <KPI label="Alumnos totales" value={String(total)} hint="en la marca activa" accent="pine" />
+        <KPI
+          label="Alumnos totales"
+          value={total.toLocaleString("es-PE")}
+          hint="en la marca activa"
+          accent="pine"
+          onClick={() => onSegment("todos")}
+        />
         {isReal ? (
           <KPI
             label="Contactables por correo"
             value={`${pct(conCorreo, total)}%`}
             hint={`${conCorreo.toLocaleString("es-PE")} con correo`}
             accent="gold"
+            onClick={() => onSegment("con-correo")}
           />
         ) : (
           <KPI
@@ -63,19 +72,22 @@ export function Dashboard({
             value={`${pct(validados, total)}%`}
             hint={`${validados} con comprobante`}
             accent="gold"
+            onClick={() => onSegment("pago")}
           />
         )}
         <KPI
           label="Recompra histórica"
           value={`${pct(recompradores, total)}%`}
-          hint={`${recompradores} ya recompraron`}
+          hint={`${recompradores.toLocaleString("es-PE")} ya recompraron`}
           accent="clay"
+          onClick={() => onSegment("recompradores")}
         />
         <KPI
           label="Candidatos a Nova Nexus"
           value={bands.Alto.toLocaleString("es-PE")}
           hint="propensión alta"
           accent="plum"
+          onClick={() => onSegment("alto")}
         />
       </section>
 
@@ -113,7 +125,16 @@ export function Dashboard({
         </div>
         <ul className="cand-list">
           {candidatos.map((s) => (
-            <li key={s.id} className="cand-item" tabIndex={0} role="button" onClick={() => onOpen(s.id)} onKeyDown={(e) => { if (e.key === "Enter") onOpen(s.id); }}>
+            <li
+              key={s.id}
+              className="cand-item"
+              tabIndex={0}
+              role="button"
+              onClick={() => onOpen(s.id)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") onOpen(s.id);
+              }}
+            >
               <Avatar nombre={s.nombre} marca={s.marca} />
               <div className="cand-main">
                 <strong>{s.nombre}</strong>

@@ -835,3 +835,65 @@
   .cand-score { display: none; }
   .table-card { overflow-x: auto; }
 }
+
+/* ============ KPI clicable + chip de segmento ============ */
+button.kpi {
+  font: inherit;
+  text-align: left;
+  width: 100%;
+}
+.kpi-clickable {
+  cursor: pointer;
+}
+.kpi-clickable:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--sh-3);
+  border-color: var(--line-strong);
+}
+.kpi-clickable:focus-visible {
+  outline: 2px solid var(--gold-ink);
+  outline-offset: 3px;
+}
+.kpi-cta {
+  margin-top: 8px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--ink-faint);
+  transition: color var(--fast);
+}
+.kpi-clickable:hover .kpi-cta {
+  color: var(--clay);
+}
+
+.seg-active {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 8px 8px 8px 15px;
+  border-radius: 99px;
+  background: var(--plum-soft);
+  color: var(--plum-deep);
+  font-size: 13.5px;
+  font-weight: 500;
+  border: 1px solid oklch(82% 0.06 330);
+}
+.seg-active strong {
+  font-weight: 700;
+}
+.seg-active button {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: oklch(100% 0 0 / 0.55);
+  color: var(--plum-deep);
+  font-size: 12px;
+  line-height: 1;
+  transition: background var(--fast);
+}
+.seg-active button:hover {
+  background: #fff;
+}

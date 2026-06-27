@@ -51,17 +51,29 @@ export function KPI({
   value,
   hint,
   accent,
+  onClick,
 }: {
   label: string;
   value: string;
   hint?: string;
   accent?: "pine" | "plum" | "clay" | "gold";
+  onClick?: () => void;
 }) {
-  return (
-    <article className={`kpi kpi-${accent ?? "pine"}`}>
+  const cls = `kpi kpi-${accent ?? "pine"}${onClick ? " kpi-clickable" : ""}`;
+  const inner = (
+    <>
       <span className="kpi-label">{label}</span>
       <span className="kpi-value numeric">{value}</span>
       {hint && <span className="kpi-hint">{hint}</span>}
-    </article>
+      {onClick && <span className="kpi-cta">Ver personas →</span>}
+    </>
   );
+  if (onClick) {
+    return (
+      <button type="button" className={cls} onClick={onClick}>
+        {inner}
+      </button>
+    );
+  }
+  return <article className={cls}>{inner}</article>;
 }

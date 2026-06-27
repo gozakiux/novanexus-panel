@@ -8,6 +8,14 @@ import { IconExport, IconSearch } from "./icons";
 const TODOS = "Todos";
 const MAX_FILAS = 300;
 
+const SEG_LABEL: Record<string, string> = {
+  "con-correo": "Contactables por correo",
+  recompradores: "Recompradores",
+  alto: "Propensión alta",
+  pago: "Pago validado",
+  todos: "Todos",
+};
+
 function unique(students: Student[], key: (s: Student) => string): string[] {
   const vals = [...new Set(students.map(key).filter(Boolean))].sort((a, b) =>
     a.localeCompare(b)
@@ -19,10 +27,14 @@ export function StudentsView({
   students,
   onOpen,
   isReal = false,
+  prefilter = null,
+  onClearPrefilter,
 }: {
   students: Student[];
   onOpen: (id: string) => void;
   isReal?: boolean;
+  prefilter?: string | null;
+  onClearPrefilter?: () => void;
 }) {
   const [q, setQ] = useState("");
   const [distrito, setDistrito] = useState(TODOS);
@@ -40,6 +52,10 @@ export function StudentsView({
     return students.filter((s) => {
       if (term && !`${s.nombre} ${s.dni} ${s.correo}`.toLowerCase().includes(term)) return false;
       if (nivel !== TODOS && s.nivel !== nivel) return false;
+      if (prefilter === "con-correo" && !s.correo.includes("@")) return false;
+      if (prefilter === "recompradores" && !s.recompro) return false;
+      if (prefilter === "alto" && s.nivel !== "Alto") return false;
+      if (prefilter === "pago" && s.estadoPago !== "Validado") return false;
       if (isReal) {
         if (recompra === "Recompradores" && !s.recompro) return false;
         if (recompra === "Una compra" && s.recompro) return false;
@@ -51,7 +67,7 @@ export function StudentsView({
       }
       return true;
     });
-  }, [students, q, distrito, profesion, nivel, pago, genero, recompra, isReal]);
+  }, [students, q, distrito, profesion, nivel, pago, genero, recompra, isReal, prefilter]);
 
   const visible = filtered.slice(0, MAX_FILAS);
 
@@ -73,6 +89,20 @@ export function StudentsView({
           <IconExport /> Exportar a Excel
         </button>
       </header>
+
+      {prefilter && prefilter !== "todos" && (
+        <div className="seg-active">
+          <span>
+            Mostrando: <strong>{SEG_LABEL[prefilter] ?? prefilter}</strong> ·{" "}
+            {filtered.length.toLocaleString("es-PE")}
+          </span>
+          {onClearPrefilter && (
+            <button onClick={onClearPrefilter} aria-label="Quitar segmento">
+              ✕
+            </button>
+          )}
+        </div>
+      )}
 
       <div className="filters">
         <label className="search">
