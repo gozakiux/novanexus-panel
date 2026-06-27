@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { Factor, Nivel, Student } from "../data/types";
+import type { Brand, Factor, Nivel, Student } from "../data/types";
 import { supabase } from "./supabase";
 
 const PAGE = 1000;
@@ -79,5 +79,12 @@ export function useAlumnos(enabled: boolean) {
     };
   }, [enabled]);
 
-  return { alumnos, error, cargando };
+  // Guarda/quita a una persona de Nova Nexus (cambia su marca) y persiste en Supabase.
+  const cambiarMarca = async (id: string, marca: Brand) => {
+    setAlumnos((prev) => (prev ? prev.map((a) => (a.id === id ? { ...a, marca } : a)) : prev));
+    const { error: e } = await supabase.from("alumnos").update({ marca }).eq("id", id);
+    if (e) console.error("No se pudo guardar la marca:", e.message);
+  };
+
+  return { alumnos, error, cargando, cambiarMarca };
 }

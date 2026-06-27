@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import type { Student } from "../data/types";
+import type { Brand, Student } from "../data/types";
 import { fechaLarga } from "../lib/format";
 import { BrandTag, NivelTag, PagoTag } from "./atoms";
 import { ScoreRing } from "./ScoreRing";
@@ -10,10 +10,12 @@ const DASH = "—";
 export function StudentProfile({
   student,
   onBack,
+  onGuardar,
   isReal = false,
 }: {
   student: Student;
   onBack: () => void;
+  onGuardar: (id: string, marca: Brand) => void;
   isReal?: boolean;
 }) {
   const s = student;
@@ -88,17 +90,28 @@ export function StudentProfile({
               </li>
             ))}
           </ul>
-          {esCandidato && (
+          {s.marca === "Nova Nexus" ? (
+            <div className="cta-nexus guardado">
+              <div>
+                <strong>✓ Guardado en Nova Nexus</strong>
+                <p className="muted small">Este alumno fue añadido al Diplomado TENCA.</p>
+              </div>
+              <button className="btn btn-soft" onClick={() => onGuardar(s.id, "Nueva Sendas")}>
+                Quitar
+              </button>
+            </div>
+          ) : (
             <div className="cta-nexus">
               <div>
-                <strong>Candidato ideal para Nova Nexus</strong>
-                <p className="muted small">Alta propensión a recomprar — buen perfil para el Diplomado TENCA.</p>
+                <strong>{esCandidato ? "Candidato ideal para Nova Nexus" : "¿Lo sumas a Nova Nexus?"}</strong>
+                <p className="muted small">
+                  {esCandidato
+                    ? "Alta propensión a recomprar — buen perfil para el Diplomado TENCA."
+                    : "Guárdalo para añadirlo al Diplomado TENCA de Nova Nexus."}
+                </p>
               </div>
-              <button
-                className="btn btn-nexus"
-                onClick={() => alert(`${s.nombre} marcado para invitación a Nova Nexus.`)}
-              >
-                Invitar al Diplomado TENCA
+              <button className="btn btn-nexus" onClick={() => onGuardar(s.id, "Nova Nexus")}>
+                Guardar para Nova Nexus
               </button>
             </div>
           )}

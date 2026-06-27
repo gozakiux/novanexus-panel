@@ -12,7 +12,7 @@ import { ImporterView } from "./components/ImporterView";
 
 export function App() {
   const { session, cargando: authCargando } = useAuth();
-  const { alumnos, error, cargando: dataCargando } = useAlumnos(!!session);
+  const { alumnos, error, cargando: dataCargando, cambiarMarca } = useAlumnos(!!session);
 
   const [view, setViewRaw] = useState<View>("inicio");
   const [brand, setBrand] = useState<BrandFilter>("Todas");
@@ -108,7 +108,12 @@ export function App() {
               )}
               {view === "alumnos" &&
                 (selected ? (
-                  <StudentProfile student={selected} onBack={() => setSelectedId(null)} isReal />
+                  <StudentProfile
+                    student={selected}
+                    onBack={() => setSelectedId(null)}
+                    onGuardar={cambiarMarca}
+                    isReal
+                  />
                 ) : (
                   <StudentsView
                     students={filtered}
@@ -118,7 +123,9 @@ export function App() {
                     onClearPrefilter={() => setPrefilter(null)}
                   />
                 ))}
-              {view === "segmentos" && <SegmentsView students={filtered} />}
+              {view === "segmentos" && (
+                <SegmentsView students={filtered} onSegment={goToSegment} />
+              )}
               {view === "importar" && <ImporterView />}
             </>
           )}

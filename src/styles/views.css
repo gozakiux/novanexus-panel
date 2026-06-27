@@ -897,3 +897,39 @@ button.kpi {
 .seg-active button:hover {
   background: #fff;
 }
+
+/* ============ Segmentos clicables + estado guardado ============ */
+.seg-card {
+  cursor: pointer;
+}
+.seg-card:focus-visible {
+  outline: 2px solid var(--gold-ink);
+  outline-offset: 3px;
+}
+.seg-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 10px;
+}
+.seg-actions .seg-export {
+  margin-top: 0;
+  align-self: center;
+}
+.seg-ver {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ink-faint);
+  transition: color var(--fast);
+}
+.seg-card:hover .seg-ver {
+  color: var(--clay);
+}
+.cta-nexus.guardado {
+  background: var(--alto-soft);
+  border-color: oklch(82% 0.06 158);
+}
+.cta-nexus.guardado strong {
+  color: oklch(38% 0.1 158);
+}

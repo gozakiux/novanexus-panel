@@ -1,53 +1,86 @@
 import type { Student } from "../data/types";
-import { IconExport, IconSegment } from "./icons";
+import { IconExport } from "./icons";
 
 interface Segment {
   nombre: string;
   desc: string;
-  test: (s: Student) => boolean;
+  key: string;
   tono: "pine" | "plum" | "clay" | "gold";
+  test: (s: Student) => boolean;
 }
 
 const SEGMENTS: Segment[] = [
   {
-    nombre: "Candidatos TENCA",
-    desc: "Nueva Sendas · propensión alta · aún no captados",
+    nombre: "Candidatos a Nova Nexus",
+    desc: "Propensión alta — los mejores para el Diplomado TENCA",
+    key: "alto",
     tono: "plum",
     test: (s) => s.marca === "Nueva Sendas" && s.nivel === "Alto",
   },
   {
-    nombre: "Profesionales de salud",
-    desc: "Psicología, Medicina, Enfermería, Terapia",
-    tono: "pine",
-    test: (s) => ["Psicología", "Medicina", "Enfermería", "Terapia Ocupacional", "Counseling"].includes(s.profesion),
-  },
-  {
     nombre: "Recompradores",
-    desc: "Llevaron 2 o más cursos",
+    desc: "Llevaron 2 o más programas",
+    key: "recompradores",
     tono: "gold",
-    test: (s) => s.numeroCompras >= 2,
+    test: (s) => s.recompro,
   },
   {
-    nombre: "Pago por validar",
-    desc: "Matrícula con pago pendiente",
-    tono: "clay",
-    test: (s) => s.estadoPago === "Pendiente",
-  },
-  {
-    nombre: "Lima top",
-    desc: "Distritos de alta capacidad de pago",
+    nombre: "Muy recurrentes",
+    desc: "Llevaron 3 o más programas",
+    key: "recurrentes",
     tono: "pine",
-    test: (s) => ["Miraflores", "San Isidro", "Santiago de Surco", "La Molina", "San Borja"].includes(s.distrito),
+    test: (s) => s.numeroCompras >= 3,
   },
   {
-    nombre: "Nova Nexus actuales",
-    desc: "Ya inscritos en el Diplomado TENCA",
+    nombre: "Contactables por correo",
+    desc: "Tienen correo para campañas",
+    key: "con-correo",
+    tono: "pine",
+    test: (s) => s.correo.includes("@"),
+  },
+  {
+    nombre: "Sin correo",
+    desc: "Solo se les contacta por teléfono",
+    key: "sin-correo",
+    tono: "clay",
+    test: (s) => !s.correo.includes("@"),
+  },
+  {
+    nombre: "Guardados en Nova Nexus",
+    desc: "Ya añadidos al Diplomado TENCA",
+    key: "nova-nexus",
     tono: "plum",
     test: (s) => s.marca === "Nova Nexus",
   },
 ];
 
-export function SegmentsView({ students }: { students: Student[] }) {
+function descargarCSV(nombre: string, filas: Student[]) {
+  const cab = ["Nombre", "Correo", "Celular", "Programas", "Anios", "N programas", "Puntaje", "Nivel", "Marca"];
+  const esc = (v: string) => `"${String(v).replace(/"/g, '""')}"`;
+  const lineas = [cab.map(esc).join(",")];
+  for (const s of filas) {
+    lineas.push(
+      [s.nombre, s.correo, s.celular, s.programasRaw || s.programa, s.aniosRaw ?? "", String(s.numeroCompras), String(s.score), s.nivel, s.marca]
+        .map(esc)
+        .join(",")
+    );
+  }
+  const blob = new Blob(["﻿" + lineas.join("\n")], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${nombre.toLowerCase().replace(/\s+/g, "-")}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export function SegmentsView({
+  students,
+  onSegment,
+}: {
+  students: Student[];
+  onSegment: (key: string) => void;
+}) {
   return (
     <div className="view rise">
       <header className="page-head">
@@ -55,34 +88,42 @@ export function SegmentsView({ students }: { students: Student[] }) {
           <p className="eyebrow">Activación</p>
           <h1 className="page-title">Segmentos para contactar</h1>
           <p className="page-sub">
-            Grupos listos para campañas, seguimiento o invitación a Nova Nexus
+            Haz clic en un grupo para ver a esas personas, o expórtalo a Excel
           </p>
         </div>
-        <button className="btn btn-ghost" onClick={() => alert("Abriría el constructor de segmentos a medida.")}>
-          <IconSegment /> Nuevo segmento
-        </button>
       </header>
 
       <div className="seg-grid">
         {SEGMENTS.map((seg) => {
           const matches = students.filter(seg.test);
-          const validados = matches.filter((s) => s.estadoPago === "Validado").length;
           return (
-            <article key={seg.nombre} className={`seg-card seg-${seg.tono}`}>
+            <article
+              key={seg.key}
+              className={`seg-card seg-${seg.tono}`}
+              tabIndex={0}
+              role="button"
+              onClick={() => onSegment(seg.key)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") onSegment(seg.key);
+              }}
+            >
               <div className="seg-card-top">
                 <h3>{seg.nombre}</h3>
-                <span className="seg-count numeric">{matches.length}</span>
+                <span className="seg-count numeric">{matches.length.toLocaleString("es-PE")}</span>
               </div>
               <p className="seg-desc">{seg.desc}</p>
-              <div className="seg-meta">
-                <span className="muted small">{validados} con pago validado</span>
+              <div className="seg-actions">
+                <span className="seg-ver">Ver personas →</span>
+                <button
+                  className="btn btn-soft seg-export"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    descargarCSV(seg.nombre, matches);
+                  }}
+                >
+                  <IconExport /> Exportar
+                </button>
               </div>
-              <button
-                className="btn btn-soft seg-export"
-                onClick={() => alert(`Exportaría ${matches.length} alumnos del segmento "${seg.nombre}".`)}
-              >
-                <IconExport /> Exportar
-              </button>
             </article>
           );
         })}

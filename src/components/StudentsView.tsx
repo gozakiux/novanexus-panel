@@ -10,8 +10,11 @@ const MAX_FILAS = 300;
 
 const SEG_LABEL: Record<string, string> = {
   "con-correo": "Contactables por correo",
-  recompradores: "Recompradores",
+  "sin-correo": "Sin correo (solo teléfono)",
+  recompradores: "Recompradores (2+)",
+  recurrentes: "Muy recurrentes (3+)",
   alto: "Propensión alta",
+  "nova-nexus": "Guardados en Nova Nexus",
   pago: "Pago validado",
   todos: "Todos",
 };
@@ -56,6 +59,9 @@ export function StudentsView({
       if (prefilter === "recompradores" && !s.recompro) return false;
       if (prefilter === "alto" && s.nivel !== "Alto") return false;
       if (prefilter === "pago" && s.estadoPago !== "Validado") return false;
+      if (prefilter === "recurrentes" && s.numeroCompras < 3) return false;
+      if (prefilter === "sin-correo" && s.correo.includes("@")) return false;
+      if (prefilter === "nova-nexus" && s.marca !== "Nova Nexus") return false;
       if (isReal) {
         if (recompra === "Recompradores" && !s.recompro) return false;
         if (recompra === "Una compra" && s.recompro) return false;

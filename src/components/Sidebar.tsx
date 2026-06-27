@@ -75,8 +75,8 @@ export function Sidebar({
           </div>
         </div>
         <p className="sidebar-note">
-          Demo con datos de ejemplo. El modelo definitivo se entrena en Python con tu
-          historial real de recompras.
+          Conectado a Supabase · datos reales. El modelo definitivo se entrenará en
+          Python con tu historial de recompras.
         </p>
       </div>
     </aside>
