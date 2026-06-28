@@ -1,53 +1,61 @@
 # Panel Nueva Sendas · Nova Nexus
 
-**🌐 En vivo:** https://gozakiux.github.io/novanexus-panel/
+**🌐 En vivo (oficial):** https://novanexus-panel.pages.dev/
 
-> Despliegue automático: cada `push` a `main` reconstruye y publica el sitio
-> mediante GitHub Actions (ver `.github/workflows/deploy.yml`).
+Panel web interno para gestionar alumnos de **dos marcas en un solo sistema**
+(Nueva Sendas y Nova Nexus), con **login del equipo** y un puntaje de propensión
+a recompra. Datos reales en Supabase, protegidos por login + RLS.
 
-Panel web interno para gestionar alumnos de **dos marcas en un solo sistema** y
-detectar candidatos a recompra con un puntaje de propensión.
+> Despliegue: cada `push` a `main` reconstruye y publica en **Cloudflare Pages**
+> (integración Git). Esta es la URL oficial.
 
-- **Nueva Sendas** — base existente (~6,500 alumnos importados desde Excel).
-- **Nova Nexus** — marca nueva; se llena captando a los alumnos "top" de Nueva
-  Sendas para el **Diplomado de Actualización en Terapia Familiar TENCA**.
+## Qué hace
 
-> Estado actual: **MVP visual** con datos de ejemplo y puntaje por reglas
-> (placeholder del modelo real). Aún no conectado a backend.
-
-## Pantallas
-
-1. **Inicio** — KPIs, matrículas por mes, distribución de propensión y mejores
-   candidatos al Diplomado TENCA.
-2. **Alumnos** — directorio con búsqueda y filtros (distrito, profesión, nivel,
-   pago, género) y ficha individual.
-3. **Ficha del alumno** — puntaje 0–100 explicado por factores, datos, vivienda,
-   matrícula y enlace al comprobante en Drive.
-4. **Importar base** — flujo de carga de `.xlsx` con emparejado de columnas.
+- **Login** del equipo (Supabase Auth). El panel solo se ve tras iniciar sesión.
+- **Directorio** de ~6,500 alumnos reales (desde Supabase) con búsqueda (nombre,
+  correo, celular, DNI) y filtros (nivel, recompra).
+- **Ficha** por alumno: puntaje explicado, programas, años, contacto.
+- **Puntaje de propensión** a recomprar (reglas; base para un modelo futuro).
+- **Segmentos** clicables (candidatos, recompradores, contactables…) con
+  exportación a CSV.
+- **Guardar en Nova Nexus**: marca candidatos para el Diplomado TENCA (persiste
+  en Supabase).
+- **Importar base**: sube un `.xlsx`, detecta columnas, calcula puntaje e inserta
+  en Supabase con upsert (sin duplicar a quienes ya están).
 
 ## Stack
 
-- [Vite](https://vitejs.dev/) + React 18 + TypeScript
-- Sistema de diseño propio en CSS (tokens, sin frameworks de UI)
+- Vite + React 18 + TypeScript; sistema de diseño propio en CSS.
+- **Supabase** (Postgres + Auth) — datos reales protegidos por RLS.
+- Lectura de Excel con SheetJS (`xlsx`), cargado en un chunk aparte (lazy).
+- Hosting: **Cloudflare Pages** (`public/_headers` define seguridad y caché).
+
+## Datos y seguridad
+
+- La PII de los alumnos **vive en Supabase**, no en el repo ni en el bundle.
+- Acceso por **login**; las políticas **RLS** controlan quién lee/escribe.
+- En el cliente solo va la clave **publishable** (pública por diseño). Las claves
+  **secretas** nunca se versionan: públicas en `.env.example`, secretas en
+  `.env.server.example` (solo para scripts locales de `tools/`).
 
 ## Desarrollo
 
 ```bash
+cp .env.example .env.local    # completa las claves públicas (VITE_*)
 npm install
-npm run dev      # http://localhost:5173
-npm run build    # build de producción
+npm run dev                   # http://localhost:5173
+npm run build                 # build de producción
 ```
 
-## Decisiones de diseño
+## Estructura
 
-- **Género** se captura y permite filtrar, pero **se excluye del puntaje** para
-  evitar sesgo.
-- El puntaje usa: recompras previas, estado de pago, profesión afín a terapia,
-  recencia de la matrícula y distrito.
+- `src/` — app: componentes, hooks (`useAuth`, `useAlumnos`), `lib/`.
+- `public/_headers` — headers de seguridad (CSP, X-Frame-Options…) y caché.
+- `tools/` — scripts locales (carga inicial, importación). **Gitignored.**
 
-## Pendiente (siguientes etapas)
+## Pendiente
 
-- Backend en **Supabase** (base de datos + autenticación del equipo).
-- Importador real del Excel de alumnos.
-- **Modelo predictivo en Python** entrenado con el historial real de recompras.
-- Despliegue web con acceso por login.
+- Endurecer **RLS** para limitar por rol quién lee/exporta/edita (no solo
+  "authenticated").
+- Tests automatizados y ESLint.
+- Modelo de scoring entrenado en Python con el historial real de recompras.

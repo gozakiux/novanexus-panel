@@ -54,7 +54,7 @@ export function StudentsView({
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();
     return students.filter((s) => {
-      if (term && !`${s.nombre} ${s.dni} ${s.correo}`.toLowerCase().includes(term)) return false;
+      if (term && !`${s.nombre} ${s.dni} ${s.correo} ${s.celular}`.toLowerCase().includes(term)) return false;
       if (nivel !== TODOS && s.nivel !== nivel) return false;
       if (prefilter === "con-correo" && !s.correo.includes("@")) return false;
       if (prefilter === "recompradores" && !s.recompro) return false;
@@ -115,7 +115,7 @@ export function StudentsView({
         <label className="search">
           <IconSearch />
           <input
-            placeholder="Buscar por nombre, correo o DNI…"
+            placeholder="Buscar por nombre, correo, celular o DNI…"
             value={q}
             onChange={(e) => setQ(e.target.value)}
           />

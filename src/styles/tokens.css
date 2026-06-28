@@ -21,6 +21,7 @@
   --plum-soft: oklch(93% 0.045 330);
   --gold: oklch(76% 0.115 84);
   --gold-deep: oklch(64% 0.12 78);
+  --gold-ink: oklch(48% 0.09 80); /* dorado oscuro: foco/contraste sobre claro */
 
   /* ---- Accent: clay / terracotta (human warmth) ---- */
   --clay: oklch(64% 0.13 46);
