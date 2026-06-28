@@ -1,20 +1,64 @@
+import { useMemo, useRef, useState } from "react";
+import type { ChangeEvent } from "react";
+import type { Student } from "../data/types";
+import { parseExcel } from "../lib/importExcel";
+import type { ResultadoParseo } from "../lib/importExcel";
 import { IconUpload } from "./icons";
 
-const MAPEO = [
-  { excel: "NOMBRES Y APELLIDOS", campo: "Nombre completo", ok: true },
-  { excel: "DNI", campo: "DNI / CE", ok: true },
-  { excel: "SEXO", campo: "Género", ok: true },
-  { excel: "CORREO", campo: "Correo", ok: true },
-  { excel: "CELULAR", campo: "Celular", ok: true },
-  { excel: "DISTRITO", campo: "Distrito", ok: true },
-  { excel: "PROFESION", campo: "Profesión", ok: true },
-  { excel: "FECHA PAGO", campo: "Fecha de matrícula", ok: true },
-  { excel: "LINK VOUCHER", campo: "Comprobante (Drive)", ok: true },
-  { excel: "N CURSOS", campo: "N.° de compras", ok: true },
-  { excel: "OBSERVACIONES", campo: "— sin asignar —", ok: false },
-];
+export function ImporterView({
+  existentes,
+  onImportar,
+}: {
+  existentes: Student[];
+  onImportar: (nuevos: Student[]) => Promise<{ ok: boolean; insertados: number; error?: string }>;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [archivo, setArchivo] = useState("");
+  const [parseando, setParseando] = useState(false);
+  const [res, setRes] = useState<ResultadoParseo | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [importando, setImportando] = useState(false);
+  const [hecho, setHecho] = useState<number | null>(null);
 
-export function ImporterView() {
+  const emails = useMemo(() => new Set(existentes.map((s) => s.correo).filter(Boolean)), [existentes]);
+  const nombres = useMemo(() => new Set(existentes.map((s) => s.nombre.toLowerCase())), [existentes]);
+
+  const nuevos = useMemo(() => {
+    if (!res) return [];
+    return res.alumnos.filter((a) =>
+      a.correo ? !emails.has(a.correo) : !nombres.has(a.nombre.toLowerCase())
+    );
+  }, [res, emails, nombres]);
+
+  async function alElegir(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setError(null);
+    setHecho(null);
+    setRes(null);
+    setArchivo(file.name);
+    setParseando(true);
+    try {
+      const buf = await file.arrayBuffer();
+      setRes(await parseExcel(buf));
+    } catch {
+      setError("No pudimos leer el archivo. Asegúrate de que sea un .xlsx válido.");
+    } finally {
+      setParseando(false);
+    }
+  }
+
+  async function importar() {
+    setImportando(true);
+    setError(null);
+    const r = await onImportar(nuevos);
+    setImportando(false);
+    if (r.ok) setHecho(r.insertados);
+    else setError(`Se importaron ${r.insertados}, pero hubo un error: ${r.error}`);
+  }
+
+  const yaExisten = res ? res.alumnos.length - nuevos.length : 0;
+
   return (
     <div className="view rise">
       <header className="page-head">
@@ -22,68 +66,101 @@ export function ImporterView() {
           <p className="eyebrow">Carga de datos</p>
           <h1 className="page-title">Importar base de Excel</h1>
           <p className="page-sub">
-            Sube tu archivo .xlsx una vez, empareja las columnas y el sistema crea o actualiza los registros
+            Sube tu .xlsx; detectamos las columnas, descartamos lo que ya existe e importamos el resto a Supabase
           </p>
         </div>
       </header>
 
-      <ol className="steps">
-        <li className="step is-done"><span>1</span> Subir archivo</li>
-        <li className="step is-current"><span>2</span> Emparejar columnas</li>
-        <li className="step"><span>3</span> Validar</li>
-        <li className="step"><span>4</span> Importar</li>
-      </ol>
-
       <div className="grid-import">
         <section className="card dropzone">
+          <input
+            ref={inputRef}
+            type="file"
+            accept=".xlsx,.xls"
+            style={{ display: "none" }}
+            onChange={alElegir}
+          />
           <div className="dropzone-inner">
-            <span className="dropzone-icon"><IconUpload size={26} /></span>
-            <strong>Arrastra tu base aquí</strong>
-            <p className="muted small">o haz clic para elegir un archivo .xlsx (máx. 10 MB)</p>
-            <button className="btn btn-soft" onClick={() => alert("Aquí se abriría el selector de archivos.")}>
+            <span className="dropzone-icon">
+              <IconUpload size={26} />
+            </span>
+            <strong>Sube tu base de alumnos</strong>
+            <p className="muted small">Archivo .xlsx — leemos la hoja con más filas</p>
+            <button className="btn btn-soft" onClick={() => inputRef.current?.click()}>
               Elegir archivo
             </button>
-            <div className="file-chip">
-              <span className="file-dot" /> base_nueva_sendas_2026.xlsx · 6,512 filas
-            </div>
+            {archivo && (
+              <div className="file-chip">
+                <span className="file-dot" /> {archivo}
+              </div>
+            )}
           </div>
         </section>
 
         <section className="card pad">
-          <div className="card-head">
-            <h3>Emparejado de columnas</h3>
-            <span className="muted">10 de 11 reconocidas</span>
-          </div>
-          <table className="map-table">
-            <thead>
-              <tr>
-                <th>Columna del Excel</th>
-                <th>Campo del sistema</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {MAPEO.map((m) => (
-                <tr key={m.excel}>
-                  <td className="numeric-col">{m.excel}</td>
-                  <td className={m.ok ? "" : "muted"}>{m.campo}</td>
-                  <td>
-                    <span className={`map-flag ${m.ok ? "ok" : "warn"}`}>
-                      {m.ok ? "Emparejada" : "Ignorar"}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <div className="import-foot">
-            <p className="muted small">
-              Se detectaron <strong>6,512 alumnos</strong> · 0 duplicados por DNI · 18 fechas a revisar.
-            </p>
-            <button className="btn btn-primary" onClick={() => alert("Validaría e importaría los 6,512 registros.")}>
-              Validar e importar
-            </button>
-          </div>
+          {!res && !parseando && !error && (
+            <div className="boot-inline">Elige un archivo para empezar.</div>
+          )}
+          {parseando && <div className="boot-inline">Leyendo el archivo…</div>}
+          {error && <div className="boot-inline error">{error}</div>}
+
+          {res && (
+            <>
+              <div className="card-head">
+                <h3>Columnas detectadas</h3>
+                <span className="muted">{res.totalFilas.toLocaleString("es-PE")} filas leídas</span>
+              </div>
+              <table className="map-table">
+                <thead>
+                  <tr>
+                    <th>Campo del sistema</th>
+                    <th>Columna del Excel</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {res.columnas.map((m) => (
+                    <tr key={m.campo}>
+                      <td>{m.campo}</td>
+                      <td className={m.excel ? "numeric-col" : "muted"}>
+                        {m.excel ?? "— no encontrada —"}
+                      </td>
+                      <td>
+                        <span className={`map-flag ${m.excel ? "ok" : "warn"}`}>
+                          {m.excel ? "Mapeada" : "Falta"}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              <p className="import-resumen">
+                <strong className="numeric">{nuevos.length.toLocaleString("es-PE")}</strong> nuevos para importar ·{" "}
+                {yaExisten.toLocaleString("es-PE")} ya existen ·{" "}
+                {res.descartadas.toLocaleString("es-PE")} descartados
+              </p>
+
+              {hecho !== null ? (
+                <div className="import-ok">
+                  ✓ {hecho.toLocaleString("es-PE")} alumnos importados a Supabase.
+                </div>
+              ) : (
+                <div className="import-foot">
+                  <p className="muted small">
+                    Se agregan como Nueva Sendas, con su puntaje calculado. No se duplican los que ya están.
+                  </p>
+                  <button
+                    className="btn btn-primary"
+                    onClick={importar}
+                    disabled={importando || nuevos.length === 0}
+                  >
+                    {importando ? "Importando…" : `Importar ${nuevos.length.toLocaleString("es-PE")} alumnos`}
+                  </button>
+                </div>
+              )}
+            </>
+          )}
         </section>
       </div>
     </div>

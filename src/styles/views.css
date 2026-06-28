@@ -940,3 +940,26 @@ button.kpi {
   font-weight: 500;
   color: oklch(50% 0.14 32);
 }
+
+/* ============ Importador ============ */
+.import-resumen {
+  margin-top: 18px;
+  padding: 12px 14px;
+  border-radius: var(--r-sm);
+  background: var(--card-sunk);
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+.import-resumen strong {
+  color: var(--pine-deep);
+  font-size: 15px;
+}
+.import-ok {
+  margin-top: 16px;
+  padding: 14px 16px;
+  border-radius: var(--r-md);
+  background: var(--alto-soft);
+  color: oklch(38% 0.1 158);
+  font-weight: 600;
+  font-size: 14px;
+}

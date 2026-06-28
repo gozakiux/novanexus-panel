@@ -54,6 +54,34 @@ async function fetchAll(): Promise<Student[]> {
   return out;
 }
 
+function toRow(s: Student): Record<string, unknown> {
+  return {
+    id: s.id,
+    dni: s.dni,
+    nombre: s.nombre,
+    genero: s.genero,
+    correo: s.correo,
+    celular: s.celular,
+    direccion: s.direccion,
+    distrito: s.distrito,
+    provincia: s.provincia,
+    departamento: s.departamento,
+    profesion: s.profesion,
+    marca: s.marca,
+    programa: s.programa,
+    programas_raw: s.programasRaw ?? "",
+    anios_raw: s.aniosRaw ?? "",
+    fecha_matricula: s.fechaMatricula || null,
+    estado_pago: s.estadoPago,
+    comprobante_url: s.comprobanteUrl,
+    numero_compras: s.numeroCompras,
+    recompro: s.recompro,
+    score: s.score,
+    nivel: s.nivel,
+    factores: s.factores,
+  };
+}
+
 export function useAlumnos(enabled: boolean) {
   const [alumnos, setAlumnos] = useState<Student[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -96,5 +124,19 @@ export function useAlumnos(enabled: boolean) {
     return true;
   };
 
-  return { alumnos, error, cargando, cambiarMarca };
+  // Inserta/actualiza alumnos importados (upsert por id) y los suma a la lista local.
+  const importarAlumnos = async (
+    nuevos: Student[]
+  ): Promise<{ ok: boolean; insertados: number; error?: string }> => {
+    if (!nuevos.length) return { ok: true, insertados: 0 };
+    for (let i = 0; i < nuevos.length; i += 500) {
+      const lote = nuevos.slice(i, i + 500).map(toRow);
+      const { error: e } = await supabase.from("alumnos").upsert(lote, { onConflict: "id" });
+      if (e) return { ok: false, insertados: i, error: e.message };
+    }
+    setAlumnos((prev) => (prev ? [...nuevos, ...prev] : nuevos));
+    return { ok: true, insertados: nuevos.length };
+  };
+
+  return { alumnos, error, cargando, cambiarMarca, importarAlumnos };
 }
