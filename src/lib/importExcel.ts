@@ -2,7 +2,12 @@ import type { Student } from "../data/types";
 import { scoreReal } from "./scoreReal";
 
 const norm = (s: string) =>
-  s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
+  s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
 
 function titulo(s: string): string {
   return s
@@ -12,10 +17,18 @@ function titulo(s: string): string {
     .join(" ");
 }
 
-function findCol(headers: string[], aliases: string[]): string | undefined {
+function findCol(
+  headers: string[],
+  aliases: string[],
+  usados: Set<string>
+): string | undefined {
   for (const h of headers) {
+    if (usados.has(h)) continue;
     const n = norm(h);
-    if (aliases.some((a) => n.includes(a))) return h;
+    if (aliases.some((a) => n.includes(a))) {
+      usados.add(h);
+      return h;
+    }
   }
   return undefined;
 }
@@ -42,13 +55,14 @@ export async function parseExcel(buf: ArrayBuffer): Promise<ResultadoParseo> {
   const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(wb.Sheets[hoja], { defval: "" });
   const headers = rows.length ? Object.keys(rows[0]) : [];
 
+  const usados = new Set<string>();
   const col = {
-    nombre: findCol(headers, ["nombre"]),
-    correo: findCol(headers, ["email", "correo", "mail"]),
-    telefono: findCol(headers, ["telefono", "celular", "whatsapp", "cel"]),
-    nProg: findCol(headers, ["n programas", "nro programas", "n cursos", "numero de programas", "cantidad"]),
-    anios: findCol(headers, ["anios", "ano", "year"]),
-    programa: findCol(headers, ["programas", "programa", "curso"]),
+    nombre: findCol(headers, ["nombre"], usados),
+    correo: findCol(headers, ["email", "correo", "mail"], usados),
+    telefono: findCol(headers, ["telefono", "celular", "whatsapp", "cel"], usados),
+    nProg: findCol(headers, ["n programas", "nro programas", "n cursos", "n de programas", "cantidad"], usados),
+    anios: findCol(headers, ["anios", "ano", "year"], usados),
+    programa: findCol(headers, ["programas", "programa", "curso"], usados),
   };
 
   const val = (r: Record<string, unknown>, c: string | undefined) =>
